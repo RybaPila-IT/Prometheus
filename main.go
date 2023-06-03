@@ -35,15 +35,22 @@ func main() {
 		Name: "open_connections",
 		Help: "Number of open connections to the server",
 	})
+	// Histogram metrics.
+	requestSizes := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "request_size_bytes",
+		Help:    "Histogram of request sizes for requests to the server",
+		Buckets: []float64{100, 200, 300, 400, 500, 1000},
+	})
 
 	prometheus.MustRegister(successfulLogin)
 	prometheus.MustRegister(invalidLogin)
 	prometheus.MustRegister(openConnections)
+	prometheus.MustRegister(requestSizes)
 
+	// Exporting metrics registered by the server.
 	http.Handle("/metrics", promhttp.Handler())
 
 	/**
-
 	Example of counter metrics.
 
 	Whenever a user hits the "/login" endpoint we simulate a login attempt to the application.
@@ -52,7 +59,6 @@ func main() {
 	This way (alongside with the usage of PromQL) we can monitor user traffic to the app
 	as well as malicious activities happening to our server (huge spike in invalid
 	login attempts may be an attack attempt).
-
 	*/
 	http.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
 		if req.Method != "POST" {
@@ -94,6 +100,22 @@ func main() {
 		delay := rand.Intn(5) + 1
 		time.Sleep(time.Duration(delay) * time.Second)
 		if _, err := w.Write([]byte(fmt.Sprintf("Your request completed! Your delay was %ds", delay))); err != nil {
+			println(err)
+		}
+	})
+
+	/**
+	Example of histogram metric.
+
+	We collect the information about the sizes of requests received by the server.
+	*/
+	http.HandleFunc("/submit", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		requestSizes.Observe(float64(req.ContentLength))
+		if _, err := w.Write([]byte("Thank you for the submission!")); err != nil {
 			println(err)
 		}
 	})
