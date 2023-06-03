@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -13,19 +15,30 @@ import (
 // The usage of counter metric - amount of valid and invalid authentication
 const secret = "NeverGonnaGiveYouApNeverGonnaLetYouDown"
 
-func main() {
+func init() {
+	// Setting up random number generator.
+	rand.Seed(time.Now().UnixNano())
+}
 
+func main() {
+	// Counter metrics.
 	successfulLogin := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "successful_login",
-		Help: "Counter representing successful logins to the application",
+		Help: "Counter representing successful logins to the server",
 	})
 	invalidLogin := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "invalid_login",
-		Help: "Counter representing invalid login attempts to the application",
+		Help: "Counter representing invalid login attempts to the server",
+	})
+	// Gauge metrics.
+	openConnections := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "open_connections",
+		Help: "Number of open connections to the server",
 	})
 
 	prometheus.MustRegister(successfulLogin)
 	prometheus.MustRegister(invalidLogin)
+	prometheus.MustRegister(openConnections)
 
 	http.Handle("/metrics", promhttp.Handler())
 
@@ -41,13 +54,13 @@ func main() {
 	login attempts may be an attack attempt).
 
 	*/
-	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+	http.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != "POST" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
@@ -66,6 +79,23 @@ func main() {
 			println("Writing response to client:", err)
 		}
 		successfulLogin.Inc()
+	})
+
+	/**
+	Example of gauge metric.
+
+	We count the number of open connections to the "/connect" endpoint. Connections are
+	hanging due to random delay between 1-5s.
+	*/
+	http.HandleFunc("/connect", func(w http.ResponseWriter, req *http.Request) {
+		openConnections.Inc()
+		defer openConnections.Dec()
+		// Simulate some work is being done here.
+		delay := rand.Intn(5) + 1
+		time.Sleep(time.Duration(delay) * time.Second)
+		if _, err := w.Write([]byte(fmt.Sprintf("Your request completed! Your delay was %ds", delay))); err != nil {
+			println(err)
+		}
 	})
 
 	fmt.Println("Starting server on port 8080...")
