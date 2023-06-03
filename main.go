@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// The usage of counter metric - amount of valid and invalid authentication
 const secret = "NeverGonnaGiveYouApNeverGonnaLetYouDown"
 
 func init() {
