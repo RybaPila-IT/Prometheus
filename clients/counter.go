@@ -13,6 +13,11 @@ const validLoginAttemptsTime = 1 * time.Minute
 const invalidLoginAttemptsTime = 10 * time.Second
 const invalidLoginAttemptsDelay = 40 * time.Second
 
+func init() {
+	// Setting up random number generator.
+	rand.Seed(time.Now().UnixNano())
+}
+
 func successfulLogin() {
 	login(validLoginAttemptsTime, func() time.Duration { return time.Duration(rand.Intn(1500)+500) * time.Millisecond }, "NeverGonnaGiveYouApNeverGonnaLetYouDown")
 }
