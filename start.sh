@@ -55,6 +55,9 @@ echo -e "${GREEN}Prometheus started with PID $!${NO_COLOR}"
 
 sleep 10
 
-# Start counter client in the background
-$dir/$counter &
+# Starting clients in the background
+"$dir"/"$counter" &
 echo -e "${GREEN}Counter client started with PID $!${NO_COLOR}"
+
+$"$dir"/"$gauge" &
+echo -e "${GREEN}Gauge client started with PID $!${NO_COLOR}"

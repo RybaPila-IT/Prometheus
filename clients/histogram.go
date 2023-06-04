@@ -5,21 +5,17 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
-
-const attempts = 1 * time.Minute
-const increaseDelay = 30 * time.Second
 
 func init() {
 	// Setting up random number generator.
 	rand.Seed(time.Now().UnixNano())
 }
 
-func connect() {
+func main() {
 	client := &http.Client{}
-	timer := time.NewTimer(attempts)
+	timer := time.NewTimer(time.Minute)
 	// For "attempts" duration time we keep sending the requests to "/connect" endpoint
 	// with random delay between 0.5s to 2s.
 	// The requests send to "/connect" may be blocking for time between 1s-10s (sleeping on server side).
@@ -28,9 +24,12 @@ func connect() {
 		case <-timer.C:
 			return
 		default:
-			time.Sleep(time.Duration(rand.Intn(1500)+500) * time.Millisecond)
+			length := int(rand.NormFloat64()*275 + 550)
+			if length < 0 {
+				length = 0
+			}
 			// Start the job
-			req, err := http.NewRequest("GET", "http://localhost:8080/connect", strings.NewReader(""))
+			req, err := http.NewRequest("POST", "http://localhost:8080/submit", strings.NewReader(strings.Repeat("a", length)))
 			if err != nil {
 				fmt.Printf("Error creating request: %v\n", err)
 				continue
@@ -43,29 +42,4 @@ func connect() {
 			_ = resp.Body.Close()
 		}
 	}
-}
-
-func main() {
-
-	var wg sync.WaitGroup
-
-	for i := 0; i < 2; i++ {
-		go func() {
-			connect()
-			wg.Done()
-		}()
-		wg.Add(1)
-	}
-
-	time.Sleep(increaseDelay)
-
-	for i := 0; i < 5; i++ {
-		go func() {
-			connect()
-			wg.Done()
-		}()
-		wg.Add(1)
-	}
-
-	wg.Wait()
 }
