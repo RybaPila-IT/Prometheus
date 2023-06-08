@@ -29,7 +29,7 @@ fi
 
 # Build the Golang apps
 if [[ ! -f $dir/$server ]]; then
-  go build -o $dir/$server  main.go
+  go build -o $dir/$server  server.go
 else
   echo "Skipping server building..."
 fi
