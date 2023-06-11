@@ -22,7 +22,7 @@ func connect() {
 	timer := time.NewTimer(attempts)
 	// For "attempts" duration time we keep sending the requests to "/connect" endpoint
 	// with random delay between 0.5s to 2s.
-	// The requests send to "/connect" may be blocking for time between 1s-10s (sleeping on server side).
+	// The requests send to "/connect" may be blocking for time between 1s-3s (sleeping on server side).
 	for {
 		select {
 		case <-timer.C:

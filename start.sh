@@ -6,6 +6,7 @@ NO_COLOR='\033[0m'
 server="server"
 counter="counter"
 gauge="gauge"
+histogram="histogram"
 dir="bin"
 
 if [[ $# -ne 1 ]]; then
@@ -20,6 +21,7 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; t
     server="server.exe"
     counter="counter.exe"
     gauge="gauge.exe"
+    histogram="histogram.exe"
 fi
 
 if [[ ! -d "$dir" ]]; then
@@ -43,6 +45,11 @@ if [[ ! -f $dir/$gauge ]]; then
 else
   echo "Skipping gauge client building..."
 fi
+if [[ ! -f $dir/$histogram ]]; then
+  go build -o $dir/$histogram   clients/histogram.go
+else
+  echo "Skipping histogram client building..."
+fi
 
 # Start the server in the background
 ./"$dir"/"$server" &
@@ -61,3 +68,6 @@ echo -e "${GREEN}Counter client started with PID $!${NO_COLOR}"
 
 $"$dir"/"$gauge" &
 echo -e "${GREEN}Gauge client started with PID $!${NO_COLOR}"
+
+$"$dir"/"$histogram" &
+echo -e "${GREEN}Histogram client started with PID $!${NO_COLOR}"

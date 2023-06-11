@@ -38,7 +38,7 @@ func main() {
 	requestSizes := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:    "request_size_bytes",
 		Help:    "Histogram of request sizes for requests to the server",
-		Buckets: []float64{100, 200, 300, 400, 500, 1000},
+		Buckets: []float64{100, 200, 300, 400, 500, 600},
 	})
 
 	prometheus.MustRegister(successfulLogin)
@@ -90,13 +90,13 @@ func main() {
 	Example of gauge metric.
 
 	We count the number of open connections to the "/connect" endpoint. Connections are
-	hanging due to random delay between 1-5s.
+	hanging due to random delay between 1-3s.
 	*/
 	http.HandleFunc("/connect", func(w http.ResponseWriter, req *http.Request) {
 		openConnections.Inc()
 		defer openConnections.Dec()
 		// Simulate some work is being done here.
-		delay := rand.Intn(5) + 1
+		delay := rand.Intn(2) + 1
 		time.Sleep(time.Duration(delay) * time.Second)
 		if _, err := w.Write([]byte(fmt.Sprintf("Your request completed! Your delay was %ds", delay))); err != nil {
 			println(err)

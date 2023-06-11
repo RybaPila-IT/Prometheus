@@ -16,15 +16,13 @@ func init() {
 func main() {
 	client := &http.Client{}
 	timer := time.NewTimer(time.Minute)
-	// For "attempts" duration time we keep sending the requests to "/connect" endpoint
-	// with random delay between 0.5s to 2s.
-	// The requests send to "/connect" may be blocking for time between 1s-10s (sleeping on server side).
+	// For "attempts" duration time we keep sending the requests to "/submit" endpoint. No delay between requests.
 	for {
 		select {
 		case <-timer.C:
 			return
 		default:
-			length := int(rand.NormFloat64()*275 + 550)
+			length := int(rand.NormFloat64()*150 + 300)
 			if length < 0 {
 				length = 0
 			}
